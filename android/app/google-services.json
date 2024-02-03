@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "792677641794",
+    "project_id": "myfitnesstracker-857f7",
+    "storage_bucket": "myfitnesstracker-857f7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792677641794:android:c8b08f77c433d04a0d87db",
+        "android_client_info": {
+          "package_name": "com.example.get_fit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "792677641794-j4g4eqhmn0t8778vt17jpbk8n3iohh1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNX2K4QV5H6LD9CKCQAoB2Llc-j3znajk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "792677641794-j4g4eqhmn0t8778vt17jpbk8n3iohh1a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "792677641794-cmt30d99nj67nh63b5m2iibhkhfv3ouj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flutterflow.myfitnesstracker"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792677641794:android:4cd56abbe51e2ea80d87db",
+        "android_client_info": {
+          "package_name": "com.flutterflow.myfitnesstracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "792677641794-aue63rcpdvhjb839bqgcgl5fqbd3n4vf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flutterflow.myfitnesstracker",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "792677641794-j4g4eqhmn0t8778vt17jpbk8n3iohh1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNX2K4QV5H6LD9CKCQAoB2Llc-j3znajk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "792677641794-j4g4eqhmn0t8778vt17jpbk8n3iohh1a.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "792677641794-cmt30d99nj67nh63b5m2iibhkhfv3ouj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flutterflow.myfitnesstracker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
