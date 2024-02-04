@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/widgets/custom_progress_indicator.dart';
@@ -83,7 +82,7 @@ class _SignInState extends State<SignIn> {
           ),
           const SizedBox(height: 24),
           TextFormField(
-            //controller: _controller1,
+            controller: _controller1,
             focusNode: _focusNode1,
             decoration: const InputDecoration(
               labelText: 'Email',
@@ -99,7 +98,7 @@ class _SignInState extends State<SignIn> {
           ),
           const SizedBox(height: 15.0),
           TextFormField(
-            //controller: _controller2,
+            controller: _controller2,
             autofillHints: const [AutofillHints.password],
             focusNode: _focusNode2,
             decoration: InputDecoration(
@@ -177,14 +176,14 @@ class _SignInState extends State<SignIn> {
     try {
       email = email;
       password = password;
-      //email = "gmtfrombc@gmail.com";
-      //password = "password";
+      email = "gmtfrombc@gmail.com";
+      password = "password";
       await authProvider.signInWithEmailAndPassword(
         email,
         password,
       );
       if (mounted) {
-        Navigator.pushNamed(context, '/home');
+        Navigator.pushNamed(context, '/homescreen');
       }
     } catch (e) {
       if (mounted) {

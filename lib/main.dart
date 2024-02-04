@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_fit/firebase_options.dart';
 import 'package:get_fit/providers/auth_provider.dart';
-import 'package:get_fit/screens/_home_screen.dart';
+import 'package:get_fit/providers/workout_group_provider.dart';
+import 'package:get_fit/providers/workout_provider.dart';
+import 'package:get_fit/screens/home_screen.dart';
+import 'package:get_fit/screens/logins/login.dart';
 import 'package:get_fit/themes/app_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +25,12 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => AuthProviderClass(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => WorkoutProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => WorkoutGroupProvider(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -31,15 +40,15 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Get Fit',
       theme: AppTheme.lightTheme,
-      initialRoute: '/homescreen',
+      initialRoute: '/',
       routes: {
+        '/': (context) => const LoginScreen(),
         '/homescreen': (context) => const HomeScreen(),
       },
     );

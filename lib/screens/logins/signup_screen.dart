@@ -193,7 +193,7 @@ class _SignUpState extends State<SignUp> {
       if (mounted) {
         Navigator.pushNamed(
           context,
-          '/onboardingWelcome',
+          '/homescreen',
         );
       }
     } catch (e) {
