@@ -1,13 +1,15 @@
 class Workout {
   //final String id;
   final String group;
-  final String image;
+  String? image;
+  String? color;
   final List<ExerciseSummary> exercises;
 
   Workout({
     //required this.id,
     required this.group,
-    required this.image,
+    this.image,
+    this.color,
     required this.exercises,
   });
 
@@ -16,9 +18,13 @@ class Workout {
       //id: id,
       group: map['group'] ?? '',
       image: map['image'] ?? '',
+      color: map['color'] ?? '',
       exercises: map['exercise'] != null
-          ? List<ExerciseSummary>.from((map['exercise'] as List)
-              .map((x) => ExerciseSummary.fromMap(x as Map<String, dynamic>)))
+          ? List<ExerciseSummary>.from(
+              (map['exercise'] as List).map(
+                (x) => ExerciseSummary.fromMap(x as Map<String, dynamic>),
+              ),
+            )
           : [], // Handle null case
     );
   }

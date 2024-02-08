@@ -9,9 +9,9 @@ class AppTheme {
       Color.fromARGB(255, 196, 26, 222); // Muted blue
   static const Color _primaryBackgroundColor = Color(0xFFfaf4ed);
   static const Color _secondaryBackgroundColor =
-      Color.fromARGB(255, 249, 245, 239);
+      Color(0xFFF9F5EF);
   static const Color _tertiaryBackgroundColor =
-      Color.fromARGB(255, 5, 32, 169); // Off-white
+      Color(0xFF0520A9); // Off-white
 
   static Color get primaryColor => _primaryColor;
   static Color get secondaryColor => _secondaryColor;

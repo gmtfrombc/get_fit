@@ -9,6 +9,11 @@ class WorkoutGroupProvider with ChangeNotifier {
   String get selectedGroup => _selectedGroup;
   List<WorkoutDetail> get userWorkoutDetails => _userWorkoutDetails;
 
+  void deleteWorkout(String workoutName) {
+    _userWorkoutDetails.removeWhere((element) => element.name == workoutName);
+    notifyListeners();
+  }
+
   Future<void> setSelectedGroupAndFetchWorkouts(String group, String userId) async {
     _selectedGroup = group;
     await fetchUserWorkouts(userId);

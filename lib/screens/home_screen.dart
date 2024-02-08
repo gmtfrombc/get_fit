@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleButtonClick(Workout workout) {
     setState(() => isLoading = true);
-    try {
+    try { 
       _handleWorkoutGroupSelection(workout);
     } catch (e) {
       debugPrint('Error handling button click: $e');

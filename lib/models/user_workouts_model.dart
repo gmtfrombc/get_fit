@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class UserWorkoutModel {
   final String userId;
   final List<WorkoutDetail> workouts;
@@ -26,6 +28,7 @@ class UserWorkoutModel {
 class WorkoutDetail {
   final String group;
   final String name;
+  final String id = UniqueKey().toString();
 
   WorkoutDetail({required this.group, required this.name});
 
