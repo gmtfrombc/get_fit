@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_fit/firebase_options.dart';
 import 'package:get_fit/providers/auth_provider.dart';
-import 'package:get_fit/providers/workout_group_provider.dart';
+import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
 import 'package:get_fit/screens/home_screen.dart';
 import 'package:get_fit/screens/logins/login.dart';
@@ -29,7 +29,7 @@ Future<void> main() async {
           create: (context) => WorkoutProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => WorkoutGroupProvider(),
+          create: (context) => UserWorkoutProvider(),
         ),
       ],
       child: const MyApp(),

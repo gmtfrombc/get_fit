@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
-import 'package:get_fit/providers/workout_group_provider.dart';
+import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
 import 'package:get_fit/screens/base_screen.dart';
 import 'package:get_fit/screens/set_screen.dart';
@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleButtonClick(Workout workout) {
     setState(() => isLoading = true);
-    try { 
+    try {
       _handleWorkoutGroupSelection(workout);
     } catch (e) {
       debugPrint('Error handling button click: $e');
@@ -201,7 +201,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleWorkoutGroupSelection(Workout workout) {
-    final workoutGroupProvider = Provider.of<WorkoutGroupProvider>(context, listen: false);
+    final workoutGroupProvider =
+        Provider.of<UserWorkoutProvider>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       workoutGroupProvider
           .setSelectedGroupAndFetchWorkouts(
@@ -214,6 +215,11 @@ class _HomeScreenState extends State<HomeScreen> {
               workout: workout,
             ),
           ),
+        ).then(
+          (value) {
+            Provider.of<WorkoutProvider>(context, listen: false)
+                .fetchWorkouts();
+          },
         );
       });
     });

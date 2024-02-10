@@ -1,12 +1,10 @@
 class Workout {
-  //final String id;
   final String group;
   String? image;
   String? color;
   final List<ExerciseSummary> exercises;
 
   Workout({
-    //required this.id,
     required this.group,
     this.image,
     this.color,

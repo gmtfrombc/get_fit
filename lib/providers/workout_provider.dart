@@ -19,6 +19,16 @@ class WorkoutProvider with ChangeNotifier {
     }
   }
 
+  Future<void> fetchWorkoutsByGroup(String group) async {
+    try {
+      _workouts = await _firebaseServices.fetchWorkoutsByGroup(group);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching workouts by group: $e');
+      throw Exception('Error fetching workouts by group: $e');
+    }
+  }
+
   void addWorkout(Workout workout) {
     _workouts.add(workout);
     notifyListeners();
