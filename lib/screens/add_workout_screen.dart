@@ -11,7 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class AddWorkoutScreen extends StatefulWidget {
-  final Workout workout;
+  final WorkoutModel workout;
 
   const AddWorkoutScreen({Key? key, required this.workout}) : super(key: key);
 
@@ -189,8 +189,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   void _addNewExercise(ExerciseSummary exercise) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
-    bool added =
-        userWorkoutProvider.addExerciseToWorkout(exercise, widget.workout);
+    bool added = userWorkoutProvider.addExerciseToSelectedGroup(exercise);
 
     if (!added) {
       // Show dialog here because the workout already exists

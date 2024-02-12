@@ -1,11 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
-import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
 import 'package:get_fit/screens/base_screen.dart';
-import 'package:get_fit/screens/set_screen.dart';
+import 'package:get_fit/screens/workout_screen.dart';
 import 'package:get_fit/themes/app_theme.dart';
 import 'package:get_fit/widgets/custom_app_bar.dart';
 import 'package:get_fit/widgets/custom_progress_indicator.dart';
@@ -187,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleButtonClick(Workout workout) {
+  void _handleButtonClick(WorkoutModel workout) {
     setState(() => isLoading = true);
     try {
       _handleWorkoutGroupSelection(workout);
@@ -200,28 +198,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleWorkoutGroupSelection(Workout workout) {
-    final workoutGroupProvider =
-        Provider.of<UserWorkoutProvider>(context, listen: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      workoutGroupProvider
-          .setSelectedGroupAndFetchWorkouts(
-              workout.group, FirebaseAuth.instance.currentUser!.uid)
-          .then((_) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SetScreen(
-              workout: workout,
-            ),
-          ),
-        ).then(
-          (value) {
-            Provider.of<WorkoutProvider>(context, listen: false)
-                .fetchWorkouts();
-          },
-        );
-      });
-    });
+  void _handleWorkoutGroupSelection(WorkoutModel workout) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WorkoutScreen(
+          workout: workout,
+        ),
+      ),
+    ).then(
+      (value) {
+        Provider.of<WorkoutProvider>(context, listen: false).fetchWorkouts();
+      },
+    );
   }
 }

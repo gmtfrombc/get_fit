@@ -1,18 +1,18 @@
-class Workout {
+class WorkoutModel {
   final String group;
   String? image;
   String? color;
   final List<ExerciseSummary> exercises;
 
-  Workout({
+  WorkoutModel({
     required this.group,
     this.image,
     this.color,
     required this.exercises,
   });
 
-  factory Workout.fromMap(Map<String, dynamic> map, String id) {
-    return Workout(
+  factory WorkoutModel.fromMap(Map<String, dynamic> map, String id) {
+    return WorkoutModel(
       //id: id,
       group: map['group'] ?? '',
       image: map['image'] ?? '',
@@ -37,7 +37,7 @@ class Workout {
 }
 
 class ExerciseSummary {
-  final String exerciseId;
+  int exerciseId;
   final String name;
   final int defaultReps;
   final int defaultSets;
@@ -51,7 +51,7 @@ class ExerciseSummary {
 
   factory ExerciseSummary.fromMap(Map<String, dynamic> map) {
     return ExerciseSummary(
-      exerciseId: map['exerciseId'] ?? 'No ID',
+      exerciseId: map['exerciseId'] ?? 0,
       name: map['name'] ?? 'No Name',
       defaultReps: map['defaultReps'] ?? 0,
       defaultSets: map['defaultSets'] ?? 0,

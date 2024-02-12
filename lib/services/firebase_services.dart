@@ -1,84 +1,92 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:get_fit/models/user_workouts_model.dart';
+import 'package:get_fit/models/user_workout_model.dart';
 import 'package:get_fit/models/workout_model.dart';
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 
 class FirebaseServices {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<List<Workout>> fetchWorkouts() async {
+  Future<List<WorkoutModel>> fetchWorkouts() async {
     try {
       QuerySnapshot querySnapshot =
           await _firestore.collection('workouts').get();
       return querySnapshot.docs.map((doc) {
-        return Workout.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return WorkoutModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       throw Exception('Error fetching workouts: $e');
     }
   }
 
-  Future<List<Workout>> fetchWorkoutsByGroup(String group) async {
+  Future<List<WorkoutModel>> fetchWorkoutsByGroup(String group) async {
     try {
       QuerySnapshot querySnapshot = await _firestore
           .collection('workouts')
           .where('group', isEqualTo: group)
           .get();
       return querySnapshot.docs.map((doc) {
-        return Workout.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return WorkoutModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       throw Exception('Error fetching workouts by group: $e');
     }
   }
 
-  Future<List<UserWorkoutModel>> fetchUserWorkouts(
-      String userId, String group) async {
+  Future<List<UserWorkoutModel>> fetchUserWorkoutGroups(String userId) async {
     try {
       QuerySnapshot querySnapshot = await _firestore
           .collection('user_workout_list')
           .where('userId', isEqualTo: userId)
-          //.where('workouts', isEqualTo: group)
           .get();
-      return querySnapshot.docs
-          .map((doc) =>
-              UserWorkoutModel.fromMap(doc.data() as Map<String, dynamic>))
-          .toList();
+      List<UserWorkoutModel> userWorkoutGroups = querySnapshot.docs.map((doc) {
+        return UserWorkoutModel.fromMap(doc.data() as Map<String, dynamic>);
+      }).toList();
+      return userWorkoutGroups;
     } catch (e) {
-      throw Exception('Error fetching user workouts: $e');
+      throw Exception('Error fetching user workout groups: $e');
     }
   }
 
-  Future<void> saveUserWorkouts(
-      String userId, List<WorkoutDetail> workoutDetails) async {
+  Future<void> saveUserGroupWorkouts(String userId,
+      List<ExerciseDetails> workoutGroups, String selectedGroup) async {
     try {
-      // Serialize workout details including exercises
-      List<Map<String, dynamic>> serializedWorkouts =
-          workoutDetails.map((workoutDetail) {
-        List<Map<String, dynamic>> serializedExercises =
-            workoutDetail.exercises.map((exercise) {
-          return exercise.toMap();
-        }).toList();
+      DocumentReference docRef =
+          _firestore.collection('user_workout_list').doc(userId);
 
-        return {
-          ...workoutDetail
-              .toMap(), // Serialize the rest of the workoutDetail fields
-          'exercises': serializedExercises, // Add serialized exercises here
-        };
+      // Fetch the existing document for the user
+      DocumentSnapshot snapshot = await docRef.get();
+      Map<String, dynamic> userData =
+          snapshot.exists ? snapshot.data() as Map<String, dynamic> : {};
+
+      // Prepare the new workout group data
+      List<Map<String, dynamic>> serializedWorkoutGroups = workoutGroups
+          .where((group) => group.group == selectedGroup)
+          .map((group) {
+        List<Map<String, dynamic>> serializedExercises =
+            group.exercises.map((exercise) => exercise.toMap()).toList();
+        return {'group': group.group, 'exercises': serializedExercises};
       }).toList();
 
-      // Prepare the document data
-      Map<String, dynamic> userWorkoutData = {
-        'userId': userId,
-        'workouts': serializedWorkouts,
-      };
+      // Update only the part of the document for the selected group
+      List<dynamic> existingGroups = userData['workoutGroups'] ?? [];
+      Map<String, dynamic>? existingGroupData = existingGroups
+          .firstWhereOrNull((element) => element['group'] == selectedGroup);
 
-      // Update Firestore
-      await _firestore
-          .collection('user_workout_list')
-          .doc(userId)
-          .set(userWorkoutData, SetOptions(merge: true));
+      if (existingGroupData != null) {
+        // Update existing group data
+        existingGroupData['exercises'] =
+            serializedWorkoutGroups.first['exercises'];
+      } else {
+        // Or add new group data if it doesn't exist
+        existingGroups.add(serializedWorkoutGroups.first);
+      }
+
+      // Save back the updated document
+      await docRef.set({'userId': userId, 'workoutGroups': existingGroups},
+          SetOptions(merge: true));
     } catch (e) {
-      throw Exception('Error saving user workouts: $e');
+      throw Exception('Error saving user workout groups: $e');
     }
   }
 }

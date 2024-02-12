@@ -5,9 +5,9 @@ import 'package:get_fit/services/firebase_services.dart';
 class WorkoutProvider with ChangeNotifier {
   final FirebaseServices _firebaseServices = FirebaseServices();
 
-  List<Workout> _workouts = [];
+  List<WorkoutModel> _workouts = [];
 
-  List<Workout> get workouts => _workouts;
+  List<WorkoutModel> get workouts => _workouts;
 
   Future<void> fetchWorkouts() async {
     try {
@@ -29,7 +29,7 @@ class WorkoutProvider with ChangeNotifier {
     }
   }
 
-  void addWorkout(Workout workout) {
+  void addWorkout(WorkoutModel workout) {
     _workouts.add(workout);
     notifyListeners();
   }
