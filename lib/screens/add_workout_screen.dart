@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_fit/models/all_exercises.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
@@ -99,7 +100,6 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           final allExercises = workoutProvider.workouts
               .expand((workout) => workout.exercises)
               .toList();
-
           if (allExercises.isEmpty) {
             return const Center(
               child: Text('No exercises found'),
@@ -117,7 +117,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     );
   }
 
-  Widget _buildCard(BuildContext context, ExerciseSummary exercise) {
+  Widget _buildCard(BuildContext context, AllExercises exercise) {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Center(
@@ -186,7 +186,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     );
   }
 
-  void _addNewExercise(ExerciseSummary exercise) {
+  void _addNewExercise(AllExercises exercise) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
     bool added = userWorkoutProvider.addExerciseToSelectedGroup(exercise);

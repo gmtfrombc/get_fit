@@ -1,8 +1,10 @@
+import 'package:get_fit/models/all_exercises.dart';
+
 class WorkoutModel {
   final String group;
   String? image;
   String? color;
-  final List<ExerciseSummary> exercises;
+  final List<AllExercises> exercises;
 
   WorkoutModel({
     required this.group,
@@ -18,9 +20,9 @@ class WorkoutModel {
       image: map['image'] ?? '',
       color: map['color'] ?? '',
       exercises: map['exercise'] != null
-          ? List<ExerciseSummary>.from(
+          ? List<AllExercises>.from(
               (map['exercise'] as List).map(
-                (x) => ExerciseSummary.fromMap(x as Map<String, dynamic>),
+                (x) => AllExercises.fromMap(x as Map<String, dynamic>),
               ),
             )
           : [], // Handle null case
@@ -32,38 +34,6 @@ class WorkoutModel {
       'name': group,
       'image': image,
       'exercises': exercises.map((x) => x.toMap()).toList(),
-    };
-  }
-}
-
-class ExerciseSummary {
-  int exerciseId;
-  final String name;
-  final int defaultReps;
-  final int defaultSets;
-
-  ExerciseSummary({
-    required this.exerciseId,
-    required this.name,
-    required this.defaultReps,
-    required this.defaultSets,
-  });
-
-  factory ExerciseSummary.fromMap(Map<String, dynamic> map) {
-    return ExerciseSummary(
-      exerciseId: map['exerciseId'] ?? 0,
-      name: map['name'] ?? 'No Name',
-      defaultReps: map['defaultReps'] ?? 0,
-      defaultSets: map['defaultSets'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'exerciseId': exerciseId,
-      'name': name,
-      'defaultReps': defaultReps,
-      'defaultSets': defaultSets,
     };
   }
 }

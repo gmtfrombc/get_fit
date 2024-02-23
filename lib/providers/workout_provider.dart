@@ -28,9 +28,4 @@ class WorkoutProvider with ChangeNotifier {
       throw Exception('Error fetching workouts by group: $e');
     }
   }
-
-  void addWorkout(WorkoutModel workout) {
-    _workouts.add(workout);
-    notifyListeners();
-  }
 }

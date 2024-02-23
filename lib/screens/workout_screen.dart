@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_fit/models/all_exercises.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
@@ -25,12 +26,13 @@ class WorkoutScreen extends StatefulWidget {
 }
 
 class _WorkoutScreenState extends State<WorkoutScreen> {
-  final bool isLoading = false;
+  bool isLoading = false;
   bool needsUpdate = false;
 
   @override
   void initState() {
     super.initState();
+    //get all workout data from firesbase 'workouts' collection, selected group, and workout groups
     Future.microtask(() {
       Provider.of<WorkoutProvider>(context, listen: false).fetchWorkouts();
       Provider.of<UserWorkoutProvider>(context, listen: false)
@@ -91,7 +93,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
         const SizedBox(height: 40), // Add 20px of space (top margin)
         _buildBanner(context),
         _buildWorkoutList(context),
-        _buildStartWorkout(context, widget.workout),
+        _buildStartWorkout(context),
       ],
     );
   }
@@ -145,8 +147,9 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
 
   Widget _buildWorkoutList(BuildContext context) {
     return Consumer<UserWorkoutProvider>(
-      builder: (context, workoutGroupProvider, child) {
-        final exercises = workoutGroupProvider.exercisesForSelectedGroup;
+      builder: (context, userWorkoutProvider, child) {
+        //get daily exercises for the user
+        final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
         if (exercises.isEmpty) {
           return const Center(child: Text("No exercises found"));
         }
@@ -158,7 +161,6 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               final exercise = exercises[index];
               return _buildCard(
                 context,
-                widget.workout,
                 exercise,
                 index,
               );
@@ -167,7 +169,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
               if (newIndex > oldIndex) {
                 newIndex -= 1; // Adjust for removing the item
               }
-              workoutGroupProvider.reorderExercises(oldIndex, newIndex);
+              userWorkoutProvider.reorderExercises(oldIndex, newIndex);
             },
           ),
         );
@@ -175,8 +177,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     );
   }
 
-  Widget _buildCard(BuildContext context, WorkoutModel workout,
-      ExerciseSummary exercise, int index) {
+  Widget _buildCard(BuildContext context, AllExercises exercise, int index) {
     int exerciseId = exercise.exerciseId;
     double screenWidth = MediaQuery.of(context).size.width;
     String imageUrl = 'lib/assets/images/get_fit_icon.png';
@@ -321,16 +322,42 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     });
   }
 
-  Widget _buildStartWorkout(BuildContext context, workout) {
-    return Padding(
-      padding: const EdgeInsets.all(15.0),
-      child: ElevatedButton(
-          child: const Text('Start Workout'),
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return const SetScreen();
-            }));
-          }),
+  Widget _buildStartWorkout(BuildContext context) {
+    final userWorkoutProvider =
+        Provider.of<UserWorkoutProvider>(context, listen: false);
+    final userId =
+        Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
+    if (isLoading) {
+      return const CircularProgressIndicator();
+    }
+
+    return ElevatedButton(
+      child: const Text('Start Workout'),
+      onPressed: () async {
+        setState(() => isLoading = true);
+
+        await userWorkoutProvider.fetchUserWorkoutGroups(userId);
+
+        setState(() => isLoading = false);
+
+        // After data is fetched, navigate
+        if (userWorkoutProvider.userExerciseList.isNotEmpty) {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SetScreen(
+                  exercises: userWorkoutProvider.userExerciseList,
+                  groupIndex: userWorkoutProvider.currentGroupIndex,
+                ),
+              ),
+            );
+          } else {
+            // Handle the case where data could not be fetched
+            debugPrint("Failed to load workout groups.");
+          }
+        }
+      },
     );
   }
 
@@ -346,7 +373,6 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       if (userId == null) {
         throw Exception('User not logged in');
       }
-      // Save the current state of workout groups for the selected group
       await workoutGroupProvider.saveCurrentWorkoutGroups(userId);
 
       scaffoldMessenger.showSnackBar(
