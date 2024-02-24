@@ -39,6 +39,9 @@ class FirebaseServices {
     }
   }
 
+//This returns the list of user workout groups from _user_workout_list collection--for example, 'Strength' or 'Endurance' and will consist of a List of of workoutGroups that includes 'group' and 'exercises'
+//The exercises will be 'AllExercises; and includes defaultReps, defaultSets, exerciesId, name, and weight.
+//Need to query this list in order to get the index for groupIndex (0 or 1 for 'Strength' or 'Endurance')
   Future<List<UserWorkoutModel>> fetchUserWorkoutGroups(String userId,
       {String? group}) async {
     Query query = _firestore

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_fit/models/all_exercises.dart';
 import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/providers/set_provider.dart';
@@ -11,7 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class SetScreen extends StatefulWidget {
-  final List<UserExercises> exercises;
+  final List<AllExercises> exercises;
   final int groupIndex;
   const SetScreen({
     super.key,
@@ -38,11 +39,12 @@ class _SetScreenState extends State<SetScreen> {
 
   @override
   void initState() {
+    debugPrint('group index in init state is ${widget.groupIndex}');
+    debugPrint('exercises length: ${widget.exercises.length}');
+    for (int i = 0; i < widget.exercises.length; i++) {
+      debugPrint('exercise name: ${widget.exercises[i].name}');
+    }
     super.initState();
-    // String userId =
-    //     Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
-    // Provider.of<UserWorkoutProvider>(context, listen: false)
-    //     .fetchUserWorkoutGroups(userId);
     weightFocusNode.addListener(() {
       if (weightFocusNode.hasFocus) {
         weightController.selection = TextSelection(
@@ -145,8 +147,10 @@ class _SetScreenState extends State<SetScreen> {
           ),
         ),
         TextButton(
-          onPressed:
-              handleExerciseCompletion(widget.groupIndex, widget.exercises),
+          onPressed: () {
+            debugPrint(' group index: ${widget.groupIndex}');
+            handleExerciseCompletion(widget.groupIndex, widget.exercises);
+          },
           child: Text(
             'Next',
             style: TextStyle(
@@ -428,13 +432,13 @@ class _SetScreenState extends State<SetScreen> {
     );
   }
 
-  handleExerciseCompletion(int groupIndex, List<UserExercises> exercises) {
+  handleExerciseCompletion(int groupIndex, List<AllExercises> exercises) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
     final setProvider = Provider.of<SetProvider>(context, listen: false);
     // Add current exercise to the session
     userWorkoutProvider.addToWorkoutSession(
-      exercises[groupIndex].exercises[0].name,
+      exercises[groupIndex].name,
       setProvider.setList,
     );
 

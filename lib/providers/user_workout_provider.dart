@@ -29,16 +29,25 @@ class UserWorkoutProvider with ChangeNotifier {
   String get selectedWorkoutGroup => _selectedWorkoutGroup;
   List<UserExercises> get userExerciseList => _userExerciseList;
 
-  List<AllExercises> get exercisesForSelectedWorkoutGroup {
-    final exerciseDetails = _userExerciseList
-        .firstWhereOrNull((g) => g.group == _selectedWorkoutGroup);
-    return exerciseDetails?.exercises ?? [];
-  }
-
   void setSelectedGroup(String workoutGroup) {
     _selectedWorkoutGroup = workoutGroup;
     _currentGroupIndex = findWorkoutGroupIndex(workoutGroup)!;
     notifyListeners();
+  }
+
+  int? findWorkoutGroupIndex(String groupName) {
+    debugPrint('The group name for this group is $groupName');
+    return _userExerciseList.indexWhere((workout) {
+      return workout.group == groupName;
+    });
+  }
+
+//This is the list of exercises for the selected workout group that is separated by the group name. So, it should return a list of exercises for the selected group, for example 'Strength' or 'Endurance'
+//It should consist of the defaultReps, defaultSets, exerciseId, name, and weight.
+  List<AllExercises> get exercisesForSelectedWorkoutGroup {
+    final exerciseDetails = _userExerciseList
+        .firstWhereOrNull((g) => g.group == _selectedWorkoutGroup);
+    return exerciseDetails?.exercises ?? [];
   }
 
   void nextExercise() {
@@ -143,22 +152,6 @@ class UserWorkoutProvider with ChangeNotifier {
         notifyListeners();
       }
     }
-  }
-
-  int? findWorkoutGroupIndex(String groupName) {
-    debugPrint('Finding index for $groupName');
-    for (var i = 0; i < _userExerciseList.length; i++) {
-      for (var j = 0; j < _userExerciseList[i].exercises.length; j++) {
-        debugPrint('Group: ${_userExerciseList[i].group}');
-        debugPrint('Exercise: ${_userExerciseList[i].exercises[j].name}');
-      }
-    }
-
-    return _userExerciseList.indexWhere((workout) {
-      debugPrint(' index is ${_userExerciseList.indexOf(workout)}');
-      debugPrint(' index was found? ${workout.group == groupName}');
-      return workout.group == groupName;
-    });
   }
 
   Future<void> fetchUserWorkoutGroups(String userId) async {

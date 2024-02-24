@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/all_exercises.dart';
+import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
@@ -51,6 +52,8 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Provider.of<WorkoutProvider>(context, listen: false).fetchWorkouts();
+          Provider.of<UserWorkoutProvider>(context, listen: false)
+              .setSelectedGroup(widget.workout.group);
           setState(
             () {
               needsUpdate = false;
@@ -325,37 +328,27 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   Widget _buildStartWorkout(BuildContext context) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
-    final userId =
-        Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
+
     if (isLoading) {
       return const CircularProgressIndicator();
     }
 
     return ElevatedButton(
       child: const Text('Start Workout'),
-      onPressed: () async {
-        setState(() => isLoading = true);
+      onPressed: () {
+        List<AllExercises> userExerciseList =
+            userWorkoutProvider.exercisesForSelectedWorkoutGroup;
 
-        await userWorkoutProvider.fetchUserWorkoutGroups(userId);
-
-        setState(() => isLoading = false);
-
-        // After data is fetched, navigate
         if (userWorkoutProvider.userExerciseList.isNotEmpty) {
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SetScreen(
-                  exercises: userWorkoutProvider.userExerciseList,
-                  groupIndex: userWorkoutProvider.currentGroupIndex,
-                ),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SetScreen(
+                exercises: userExerciseList,
+                groupIndex: userWorkoutProvider.currentGroupIndex,
               ),
-            );
-          } else {
-            // Handle the case where data could not be fetched
-            debugPrint("Failed to load workout groups.");
-          }
+            ),
+          );
         }
       },
     );
