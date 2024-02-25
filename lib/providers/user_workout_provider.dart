@@ -186,12 +186,25 @@ class UserWorkoutProvider with ChangeNotifier {
       for (var exercise in workout.dailyWorkout) {
         debugPrint('Exercise: ${exercise.exerciseName}');
         for (var set in exercise.sets) {
-          debugPrint('Set: ${set.reps}');
+          debugPrint('Set Reps: ${set.reps}, Weight: ${set.weight}, Set: ${set.setNumber}');
         }
       }
     }
     notifyListeners();
   }
+
+  // Method to get sorted daily workouts by date
+  List<WorkoutSession> getSortedDailyWorkoutsByDate() {
+    // Clone the list to avoid modifying the original list
+    List<WorkoutSession> sortedList =
+        List<WorkoutSession>.from(_dailyWorkoutsByDate);
+
+    // Sort the cloned list by date in descending order
+    sortedList.sort((a, b) => b.date.compareTo(a.date));
+
+    return sortedList;
+  }
+
 
 //This function fetches the document that exists for the user from the collection user_workout_list. It takes in the userId and fetches the userWorkoutGroups for that userId. It then sets the userExerciseList to the userWorkoutGroups for the selected group. This list is used in the WorkoutScreen to create the exercises for the selected group that will be used in SetScreen.
   Future<void> fetchUserWorkoutGroups(String userId) async {

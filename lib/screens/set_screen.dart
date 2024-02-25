@@ -8,6 +8,7 @@ import 'package:get_fit/themes/app_theme.dart';
 import 'package:get_fit/widgets/custom_app_bar.dart';
 import 'package:get_fit/widgets/custom_number_pad.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class SetScreen extends StatefulWidget {
@@ -33,6 +34,19 @@ class _SetScreenState extends State<SetScreen> {
   @override
   void initState() {
     super.initState();
+    String userId =
+        Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
+    String selectedWorkoutGroup =
+        Provider.of<UserWorkoutProvider>(context, listen: false)
+            .selectedWorkoutGroup;
+    final userWorkoutProvider =
+        Provider.of<UserWorkoutProvider>(context, listen: false);
+    final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
+    String selectedExercise =
+        exercises[userWorkoutProvider.currentExerciseIndex].name;
+    userWorkoutProvider.fetchUserWorkoutsForAllDates(
+        userId, selectedWorkoutGroup, selectedExercise);
+
     weightFocusNode.addListener(() {
       if (weightFocusNode.hasFocus) {
         weightController.selection = TextSelection(
@@ -45,7 +59,6 @@ class _SetScreenState extends State<SetScreen> {
             baseOffset: 0, extentOffset: repsController.text.length);
       }
     });
-    // Set the selected group
   }
 
   @override
@@ -88,17 +101,17 @@ class _SetScreenState extends State<SetScreen> {
   Widget _buildContent(BuildContext context) {
     return Column(
       children: [
+        _buildBanner(context),
+        _buildWorkoutSection(),
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildBanner(context),
-                _buildWorkoutSection(),
-                _buildSetList(context),
-                _buildPreviousSetGrid(),
-              ],
-            ),
-          ),
+          flex: 3, // Adjust flex as necessary to allocate space
+          child: _buildSetList(
+              context), // Ensure _buildSetList returns a scrollable widget
+        ),
+        Expanded(
+          flex: 7, // Adjust flex as necessary to allocate space
+          child: _buildPreviousSetGrid(
+              context), // Ensure _buildPreviousSetGrid returns a scrollable widget
         ),
       ],
     );
@@ -110,26 +123,6 @@ class _SetScreenState extends State<SetScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          TextButton(
-            // Add a button to restart the workout
-            onPressed: () {
-              Provider.of<UserWorkoutProvider>(context, listen: false)
-                  .fetchUserWorkoutsForAllDates(
-                      Provider.of<AuthProviderClass>(context, listen: false)
-                          .currentUser!
-                          .uid,
-                      'Strength',
-                      'Bench Press');
-            },
-            child: Text(
-              'Fetch',
-              style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.primaryColor,
-                  fontFamily: GoogleFonts.outfit().fontFamily,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
           TextButton(
             onPressed: () {
               Provider.of<UserWorkoutProvider>(context, listen: false)
@@ -224,14 +217,28 @@ class _SetScreenState extends State<SetScreen> {
   Widget _buildSetList(BuildContext context) {
     return Consumer<SetProvider>(
       builder: (context, setProvider, child) {
-        return ListView.builder(
-          shrinkWrap: true,
-          itemCount: setProvider.setList.length,
-          itemBuilder: (context, index) {
-            final set = setProvider.setList[index];
-            return _buildSetCard(context, set, index);
-          },
-        );
+        if (setProvider.setList.isEmpty) {
+          return Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(20),
+            child: const Text(
+              'No Sets',
+              style: TextStyle(
+                fontSize: 22,
+                color: Colors.grey,
+              ),
+            ),
+          );
+        } else {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: setProvider.setList.length,
+            itemBuilder: (context, index) {
+              final set = setProvider.setList[index];
+              return _buildSetCard(context, set, index);
+            },
+          );
+        }
       },
     );
   }
@@ -334,8 +341,73 @@ class _SetScreenState extends State<SetScreen> {
     );
   }
 
-  Widget _buildPreviousSetGrid() {
-    return const Text('Here is the set grid');
+  Widget _buildPreviousSetGrid(BuildContext context) {
+    final userWorkoutProvider = Provider.of<UserWorkoutProvider>(context);
+    final sortedWorkouts = userWorkoutProvider.getSortedDailyWorkoutsByDate();
+    return sortedWorkouts.isEmpty
+        ? const Center(
+            child: Text(
+              'No previous workouts',
+              style: TextStyle(
+                fontSize: 22,
+                color: Colors.grey,
+              ),
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sortedWorkouts.length,
+              itemBuilder: (context, index) {
+                final workout = sortedWorkouts[index];
+                final String formattedDate =
+                    DateFormat('yyyy-MM-dd').format(workout.date);
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment
+                        .start, // Keeps the text aligned left within the centered column.
+                    children: [
+                      Text(
+                        'Date: $formattedDate',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Divider(
+                          color: Colors.black,
+                          thickness: 1,
+                          endIndent: 20), // Adjust `endIndent` as needed.
+                      Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(1),
+                          1: FlexColumnWidth(1.2),
+                          2: FlexColumnWidth(0.75),
+                        },
+                        children: workout.dailyWorkout.expand((userWorkout) {
+                          return userWorkout.sets.map((set) => TableRow(
+                                children: [
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0),
+                                      child: Text('Set: ${set.setNumber}')),
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0),
+                                      child: Text('Weight: ${set.weight}')),
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0),
+                                      child: Text('Reps: ${set.reps}')),
+                                ],
+                              ));
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
   }
 
   void _showAddSetBottomSheet(BuildContext context, {int? editingIndex}) {
