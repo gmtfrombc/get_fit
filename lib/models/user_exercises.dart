@@ -1,22 +1,22 @@
 import 'package:get_fit/models/all_exercises.dart';
-
-class UserExercises {
+//in Firbase WorkoutGroups is a field in the user_workout_list collection. Each document in this collection has a userId and a list of workoutGroups. 
+class WorkoutGroups {
   final String group;
   List<AllExercises> exercises;
 
-  UserExercises({
+  WorkoutGroups({
     required this.group,
     required this.exercises,
   });
 
-  factory UserExercises.fromMap(Map<dynamic, dynamic> map) {
+  factory WorkoutGroups.fromMap(Map<dynamic, dynamic> map) {
     // Ensure exercises is handled safely if null
     List<dynamic> exercisesMapList = map['exercises'] as List? ?? [];
     List<AllExercises> exercises = exercisesMapList.map((item) {
       return AllExercises.fromMap(item as Map<String, dynamic>);
     }).toList();
 
-    return UserExercises(
+    return WorkoutGroups(
       group: map['group'] ?? '',
       exercises: exercises,
     );

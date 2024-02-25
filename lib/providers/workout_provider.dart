@@ -9,6 +9,7 @@ class WorkoutProvider with ChangeNotifier {
 
   List<WorkoutModel> get workouts => _workouts;
 
+//This function is used to fetch the workouts from the FirebaseServices class. It sets the list _workouts to the fetched workouts. Workouts is a list of workoutModels that includes the group, image, color, and list of AllExercises. The function is used in WorkoutScreen and presenets the results in the GridView.
   Future<void> fetchWorkouts() async {
     try {
       _workouts = await _firebaseServices.fetchWorkouts();
@@ -19,6 +20,7 @@ class WorkoutProvider with ChangeNotifier {
     }
   }
 
+//This function is used to fetch the workouts by group from the FirebaseServices class. It takes in the group and sets the list _workouts to the fetched workouts. Workouts is a list of workoutModels that includes the group, image, color, and list of AllExercises. It is used in AddWorkoutScreen to fetch the workouts by group and present them to the user in order to add to the existing daily workout.
   Future<void> fetchWorkoutsByGroup(String group) async {
     try {
       _workouts = await _firebaseServices.fetchWorkoutsByGroup(group);
@@ -28,4 +30,8 @@ class WorkoutProvider with ChangeNotifier {
       throw Exception('Error fetching workouts by group: $e');
     }
   }
+
+  // int? findWorkoutIndex(String groupName) {
+  //   return _workouts.indexWhere((workout) => workout.group == groupName);
+  // }
 }

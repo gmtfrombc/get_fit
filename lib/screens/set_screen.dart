@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/all_exercises.dart';
-import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/providers/set_provider.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
@@ -13,11 +12,9 @@ import 'package:provider/provider.dart';
 
 class SetScreen extends StatefulWidget {
   final List<AllExercises> exercises;
-  final int groupIndex;
   const SetScreen({
     super.key,
     required this.exercises,
-    required this.groupIndex,
   });
 
   @override
@@ -32,18 +29,9 @@ class _SetScreenState extends State<SetScreen> {
 
   String currentInputTarget = '';
   int editingIndex = -1;
-  String? selectedAssessment;
-  String? selectedRep;
-  int setNumber = 1;
-  int exerciseNumber = 0;
 
   @override
   void initState() {
-    debugPrint('group index in init state is ${widget.groupIndex}');
-    debugPrint('exercises length: ${widget.exercises.length}');
-    for (int i = 0; i < widget.exercises.length; i++) {
-      debugPrint('exercise name: ${widget.exercises[i].name}');
-    }
     super.initState();
     weightFocusNode.addListener(() {
       if (weightFocusNode.hasFocus) {
@@ -81,10 +69,10 @@ class _SetScreenState extends State<SetScreen> {
         ),
         backgroundColor: AppTheme.primaryBackgroundColor,
         showEndDrawerIcon: true,
-        showLeading: true,
+        showLeading: false,
       ),
-      showDrawer: true,
-      showAppBar: true,
+      showDrawer: false,
+      showAppBar: false,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showAddSetBottomSheet(context); // Open the bottom sheet
@@ -117,58 +105,101 @@ class _SetScreenState extends State<SetScreen> {
   }
 
   Widget _buildBanner(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text(
-            'Cancel',
-            style: TextStyle(
+    return Padding(
+      padding: const EdgeInsets.only(top: 60.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          TextButton(
+            // Add a button to restart the workout
+            onPressed: () {
+              Provider.of<UserWorkoutProvider>(context, listen: false)
+                  .fetchUserWorkoutsForAllDates(
+                      Provider.of<AuthProviderClass>(context, listen: false)
+                          .currentUser!
+                          .uid,
+                      'Strength',
+                      'Bench Press');
+            },
+            child: Text(
+              'Fetch',
+              style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.primaryColor,
+                  fontFamily: GoogleFonts.outfit().fontFamily,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<UserWorkoutProvider>(context, listen: false)
+                  .resetCurrentExerciseIndex();
+              Navigator.pop(context);
+            },
+            child: Text(
+              'Restart',
+              style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.primaryColor,
+                  fontFamily: GoogleFonts.outfit().fontFamily,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+          Container(
+            color: AppTheme.primaryBackgroundColor,
+            child: Text(
+              'Today\'s Workout',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontFamily: GoogleFonts.outfit().fontFamily,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              checkForSets()
+                  ? handleExerciseCompletion(widget.exercises)
+                  : showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('No Sets'),
+                          content: const Text(
+                              'You need to add sets for this exercise.'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+            },
+            child: Text(
+              'Next',
+              style: TextStyle(
                 fontSize: 16,
                 color: AppTheme.primaryColor,
                 fontFamily: GoogleFonts.outfit().fontFamily,
-                fontWeight: FontWeight.bold),
-          ),
-        ),
-        Container(
-          color: AppTheme.primaryBackgroundColor,
-          child: Text(
-            'Today\'s Workout',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontFamily: GoogleFonts.outfit().fontFamily,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        TextButton(
-          onPressed: () {
-            debugPrint(' group index: ${widget.groupIndex}');
-            handleExerciseCompletion(widget.groupIndex, widget.exercises);
-          },
-          child: Text(
-            'Next',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppTheme.primaryColor,
-              fontFamily: GoogleFonts.outfit().fontFamily,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildWorkoutSection() {
     return Consumer<UserWorkoutProvider>(
       builder: (context, userWorkoutProvider, child) {
-        final exercises = userWorkoutProvider.userExerciseList[0].exercises;
+        final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
         if (exercises.isNotEmpty &&
             userWorkoutProvider.currentExerciseIndex < exercises.length) {
           var currentExercise =
@@ -432,26 +463,59 @@ class _SetScreenState extends State<SetScreen> {
     );
   }
 
-  handleExerciseCompletion(int groupIndex, List<AllExercises> exercises) {
+  bool checkForSets() {
+    final setProvider = Provider.of<SetProvider>(context, listen: false);
+    return setProvider.setList.isNotEmpty;
+  }
+
+  void handleExerciseCompletion(List<AllExercises> exercises) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
     final setProvider = Provider.of<SetProvider>(context, listen: false);
+    final exerciseIndex = userWorkoutProvider.currentExerciseIndex;
+    debugPrint('Set List length: ${setProvider.setList.length}');
+
     // Add current exercise to the session
     userWorkoutProvider.addToWorkoutSession(
-      exercises[groupIndex].name,
-      setProvider.setList,
-    );
+        exercises[exerciseIndex].name, setProvider.setList);
 
     if (userWorkoutProvider.isLastExercise) {
-      debugPrint('Last exercise');
-      // Last exercise, save session
-      userWorkoutProvider.saveWorkoutSession(context);
+      // Show dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Workout Complete'),
+            content: const Text('You have completed the workout.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () async {
+                  // Save the session and wait for it to complete
+                  await userWorkoutProvider.saveWorkoutSession(context);
+                  // Close the dialog and navigate back to the home screen
+                  if (mounted) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/homescreen',
+                        (Route<dynamic> route) => false);
+                  }
+                },
+                child: const Text('Save'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Just close the dialog
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          );
+        },
+      );
     } else {
-      // Move to next exercise
+      // Not the last exercise, move to the next
       userWorkoutProvider.nextExercise();
     }
-
-    // Clear current sets
+    // Always clear the sets after handling an exercise completion
     setProvider.clearSets();
   }
 }

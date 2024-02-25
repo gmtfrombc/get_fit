@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class WorkoutSession {
   final DateTime date;
   final String workoutGroup;
@@ -11,19 +13,24 @@ class WorkoutSession {
     required this.dailyWorkout,
   });
 
-  factory WorkoutSession.fromMap(Map<dynamic, dynamic> map) {
+factory WorkoutSession.fromMap(Map<String, dynamic> map) {
+    // Assuming 'date' is the field in your Firestore document
+    Timestamp timestamp = map['date'] as Timestamp; // Get the Timestamp object
+    DateTime date = timestamp.toDate(); // Convert to DateTime
+
     List<dynamic> dailyWorkoutMapList = map['dailyWorkout'] as List? ?? [];
     List<UserWorkouts> dailyWorkout = dailyWorkoutMapList.map((item) {
       return UserWorkouts.fromMap(item as Map<String, dynamic>);
     }).toList();
 
     return WorkoutSession(
-      date: map['date'] ?? DateTime.now(),
+      date: date, // Use the converted DateTime object
       workoutGroup: map['workoutGroup'] ?? '',
       userId: map['userId'] ?? '',
       dailyWorkout: dailyWorkout,
     );
   }
+
 
   Map<String, dynamic> toMap() {
     return {

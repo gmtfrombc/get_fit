@@ -100,7 +100,7 @@ class FirebaseServices {
   }
 
   Future<void> saveUserGroupWorkouts(String userId,
-      List<UserExercises> workoutGroups, String selectedGroup) async {
+      List<WorkoutGroups> workoutGroups, String selectedGroup) async {
     try {
       DocumentReference docRef =
           _firestore.collection('user_workout_list').doc(userId);
@@ -139,5 +139,47 @@ class FirebaseServices {
     } catch (e) {
       throw Exception('Error saving user workout groups: $e');
     }
+  }
+
+  Future<List<WorkoutSession>> fetchUserWorkoutsForAllDate(String userId,
+      String selectedWorkoutGroup, String currentExercise) async {
+    List<WorkoutSession> dailyWorkoutsByDate = [];
+
+    try {
+      // Fetch documents from 'user_workouts' where 'userId' and 'workoutGroup' match the provided values
+      QuerySnapshot snapshot = await _firestore
+          .collection('user_workouts')
+          .where('userId', isEqualTo: userId)
+          .where('workoutGroup', isEqualTo: selectedWorkoutGroup)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        // Convert each document into a WorkoutSession
+        WorkoutSession session =
+            WorkoutSession.fromMap(doc.data() as Map<String, dynamic>);
+
+        // Filter 'dailyWorkout' list by 'exerciseName'
+        var filteredDailyWorkout = session.dailyWorkout
+            .where((workout) => workout.exerciseName == currentExercise)
+            .toList();
+
+        // If there are workouts after filtering, create a new WorkoutSession with the filtered list
+        if (filteredDailyWorkout.isNotEmpty) {
+          WorkoutSession filteredSession = WorkoutSession(
+            date: session.date,
+            workoutGroup: session.workoutGroup,
+            userId: session.userId,
+            dailyWorkout: filteredDailyWorkout,
+          );
+
+          // Add the filtered session to the list
+          dailyWorkoutsByDate.add(filteredSession);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching workouts: $e");
+    }
+
+    return dailyWorkoutsByDate;
   }
 }

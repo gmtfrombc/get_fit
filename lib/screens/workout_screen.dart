@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/all_exercises.dart';
-import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
@@ -73,7 +72,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       showDrawer: false,
       showAppBar: false,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.secondaryColor,
+        backgroundColor: AppTheme.primaryColor,
         onPressed: () {
           _showAddWorkoutSheet(context);
         },
@@ -93,7 +92,6 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   Widget _buildContent(BuildContext context) {
     return Column(
       children: <Widget>[
-        const SizedBox(height: 40), // Add 20px of space (top margin)
         _buildBanner(context),
         _buildWorkoutList(context),
         _buildStartWorkout(context),
@@ -102,56 +100,59 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   }
 
   Widget _buildBanner(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text(
-            'Cancel',
-            style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.primaryColor,
-                fontFamily: GoogleFonts.outfit().fontFamily,
-                fontWeight: FontWeight.bold),
-          ),
-        ),
-        Container(
-          color: AppTheme.primaryBackgroundColor,
-          child: Text(
-            'Today\'s Workout',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              fontFamily: GoogleFonts.outfit().fontFamily,
+    return Padding(
+      padding: const EdgeInsets.only(top: 60.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.primaryColor,
+                  fontFamily: GoogleFonts.outfit().fontFamily,
+                  fontWeight: FontWeight.bold),
             ),
           ),
-        ),
-        TextButton(
-          onPressed: () {
-            _showSaveConfirmationDialog(context);
-          },
-          child: Text(
-            'Save',
-            style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.primaryColor,
+          Container(
+            color: AppTheme.primaryBackgroundColor,
+            child: Text(
+              'Today\'s Workout',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
                 fontFamily: GoogleFonts.outfit().fontFamily,
-                fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
-        ),
-      ],
+          TextButton(
+            onPressed: () {
+              _showSaveConfirmationDialog(context);
+            },
+            child: Text(
+              'Save',
+              style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.primaryColor,
+                  fontFamily: GoogleFonts.outfit().fontFamily,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildWorkoutList(BuildContext context) {
     return Consumer<UserWorkoutProvider>(
       builder: (context, userWorkoutProvider, child) {
-        //get daily exercises for the user
+        //get daily exercises for the user. Should return a list of AllExercises for the selected group to be displayed in the Listview
         final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
         if (exercises.isEmpty) {
           return const Center(child: Text("No exercises found"));
@@ -180,6 +181,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     );
   }
 
+//_buildCard creates a Dismissible widget that allows the user to swipe to delete an exercise from the list. It also displays the exercise name and image in a card for the list of exercises, _userExerciseList.
   Widget _buildCard(BuildContext context, AllExercises exercise, int index) {
     int exerciseId = exercise.exerciseId;
     double screenWidth = MediaQuery.of(context).size.width;
@@ -310,47 +312,33 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     });
   }
 
-  void _handleAddNewExerciseClick(BuildContext context, WorkoutModel workout) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => AddWorkoutScreen(workout: workout)),
-    ).then((value) {
-      if (mounted) {
-        setState(
-          () {
-            needsUpdate = true;
-          },
-        );
-      }
-    });
-  }
-
   Widget _buildStartWorkout(BuildContext context) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
-
     if (isLoading) {
       return const CircularProgressIndicator();
     }
 
-    return ElevatedButton(
-      child: const Text('Start Workout'),
-      onPressed: () {
-        List<AllExercises> userExerciseList =
-            userWorkoutProvider.exercisesForSelectedWorkoutGroup;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: ElevatedButton(
+        child: const Text('Start Workout'),
+        onPressed: () {
+          List<AllExercises> userExerciseList =
+              userWorkoutProvider.exercisesForSelectedWorkoutGroup;
 
-        if (userWorkoutProvider.userExerciseList.isNotEmpty) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SetScreen(
-                exercises: userExerciseList,
-                groupIndex: userWorkoutProvider.currentGroupIndex,
+          if (userWorkoutProvider.userExerciseList.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SetScreen(
+                  exercises: userExerciseList,
+                ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -375,6 +363,21 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           .showSnackBar(SnackBar(content: Text("Error saving workouts: $e")));
       debugPrint("Error saving workouts: $e");
     }
+  }
+
+  void _handleAddNewExerciseClick(BuildContext context, WorkoutModel workout) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AddWorkoutScreen(workout: workout)),
+    ).then((value) {
+      if (mounted) {
+        setState(
+          () {
+            needsUpdate = true;
+          },
+        );
+      }
+    });
   }
 
   void _showSaveConfirmationDialog(BuildContext context) {
