@@ -47,11 +47,19 @@ class UserWorkoutProvider with ChangeNotifier {
     return exerciseDetails?.exercises ?? [];
   }
 
-  void nextExercise() {
+  void nextExercise(String? userId) {
+
     if (!isLastExercise) {
       _currentExerciseIndex++;
+
       notifyListeners();
     }
+    String selectedExercise =
+        exercisesForSelectedWorkoutGroup[_currentExerciseIndex].name;
+    debugPrint('Selected exercise for NEXT exercise is: $selectedExercise');
+    fetchUserWorkoutsForAllDates(
+        userId!, selectedWorkoutGroup, selectedExercise);
+    notifyListeners();
   }
 
   void initializeWorkoutSession() {
@@ -158,38 +166,23 @@ class UserWorkoutProvider with ChangeNotifier {
     }
   }
 
-//It iscn't currently working correctly. Here is the output from the debugPrint statements:
-
-// flutter: Workout: 2024-02-19 11:19:27.234
-// flutter: Exercise: Bench Press
-// flutter: Set: 10
-// flutter: Workout: 2024-02-22 17:36:03.418
-// flutter: Exercise: Bench Press
-// flutter: Set: 10
-// flutter: Set: 6
-
-  Future<void> fetchUserWorkoutsForAllDates(String userId,
-      String selectedWorkoutGroup, String currentExercise) async {
+  Future<void> fetchUserWorkoutsForAllDates(
+      String userId, String workoutGroup, String exerciseName) async {
     List<WorkoutSession> dailyWorkoutsByDate = [];
+    debugPrint('UserId for fetchUserWorkoutsForAllDates is: $userId');
+    debugPrint(
+        'Selected workout group for fetchUserWorkoutsForAllDates is: $workoutGroup');
+    debugPrint(
+        'Current exercise name for fetchUserWorkoutsForAllDates is: $exerciseName');
 
     try {
       dailyWorkoutsByDate = await FirebaseServices()
-          .fetchUserWorkoutsForAllDate(
-              userId, selectedWorkoutGroup, currentExercise);
+          .fetchUserWorkoutsForAllDate(userId, workoutGroup, exerciseName);
     } catch (e) {
       debugPrint('Error fetching user workouts by date: $e');
       throw Exception('Error fetching user workouts by date: $e');
     }
     _dailyWorkoutsByDate = dailyWorkoutsByDate;
-    for (var workout in dailyWorkoutsByDate) {
-      debugPrint('Workout: ${workout.date}');
-      for (var exercise in workout.dailyWorkout) {
-        debugPrint('Exercise: ${exercise.exerciseName}');
-        for (var set in exercise.sets) {
-          debugPrint('Set Reps: ${set.reps}, Weight: ${set.weight}, Set: ${set.setNumber}');
-        }
-      }
-    }
     notifyListeners();
   }
 
@@ -204,7 +197,6 @@ class UserWorkoutProvider with ChangeNotifier {
 
     return sortedList;
   }
-
 
 //This function fetches the document that exists for the user from the collection user_workout_list. It takes in the userId and fetches the userWorkoutGroups for that userId. It then sets the userExerciseList to the userWorkoutGroups for the selected group. This list is used in the WorkoutScreen to create the exercises for the selected group that will be used in SetScreen.
   Future<void> fetchUserWorkoutGroups(String userId) async {

@@ -545,8 +545,6 @@ class _SetScreenState extends State<SetScreen> {
         Provider.of<UserWorkoutProvider>(context, listen: false);
     final setProvider = Provider.of<SetProvider>(context, listen: false);
     final exerciseIndex = userWorkoutProvider.currentExerciseIndex;
-    debugPrint('Set List length: ${setProvider.setList.length}');
-
     // Add current exercise to the session
     userWorkoutProvider.addToWorkoutSession(
         exercises[exerciseIndex].name, setProvider.setList);
@@ -584,8 +582,11 @@ class _SetScreenState extends State<SetScreen> {
         },
       );
     } else {
+      final userId = Provider.of<AuthProviderClass>(context, listen: false)
+          .currentUser!
+          .uid; // Get the current user's ID
       // Not the last exercise, move to the next
-      userWorkoutProvider.nextExercise();
+      userWorkoutProvider.nextExercise(userId);
     }
     // Always clear the sets after handling an exercise completion
     setProvider.clearSets();
