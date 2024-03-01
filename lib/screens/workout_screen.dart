@@ -13,6 +13,8 @@ import 'package:get_fit/widgets/custom_progress_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+//Not pulling the data correctly from the firebase
+
 class WorkoutScreen extends StatefulWidget {
   final WorkoutModel workout;
 
@@ -39,6 +41,12 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
           .setSelectedGroup(widget.workout.group);
       Provider.of<UserWorkoutProvider>(context, listen: false)
           .fetchUserWorkoutGroups(
+              Provider.of<AuthProviderClass>(context, listen: false)
+                  .currentUser!
+                  .uid);
+      Provider.of<UserWorkoutProvider>(context, listen: false)
+          .fetchAndCacheWorkoutData(
+              widget.workout.group,
               Provider.of<AuthProviderClass>(context, listen: false)
                   .currentUser!
                   .uid);
@@ -90,11 +98,13 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   }
 
   Widget _buildContent(BuildContext context) {
+    final userWorkoutProvider = Provider.of<UserWorkoutProvider>(context);
+    final selectedWorkoutGroup = userWorkoutProvider.selectedWorkoutGroup;
     return Column(
       children: <Widget>[
         _buildBanner(context),
         _buildWorkoutList(context),
-        _buildStartWorkout(context),
+        _buildStartWorkout(context, selectedWorkoutGroup),
       ],
     );
   }
@@ -312,9 +322,11 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
     });
   }
 
-  Widget _buildStartWorkout(BuildContext context) {
+  Widget _buildStartWorkout(BuildContext context, selectedWorkoutGroup) {
     final userWorkoutProvider =
         Provider.of<UserWorkoutProvider>(context, listen: false);
+    // final userId =
+    //     Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
     if (isLoading) {
       return const CircularProgressIndicator();
     }
@@ -323,19 +335,25 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       padding: const EdgeInsets.symmetric(vertical: 20.0),
       child: ElevatedButton(
         child: const Text('Start Workout'),
-        onPressed: () {
+        onPressed: () async {
+          //fetch and cache the list of workoutGroups in user_workout_list (workout group and list of exercises) to be stored in dailyWorkoutsByDate. the userExerciseList is displayed in the Listview in SetScreen
+          // await userWorkoutProvider.fetchAndCacheWorkoutData(
+          //     selectedWorkoutGroup, userId);
           List<AllExercises> userExerciseList =
               userWorkoutProvider.exercisesForSelectedWorkoutGroup;
 
           if (userWorkoutProvider.userExerciseList.isNotEmpty) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SetScreen(
-                  exercises: userExerciseList,
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SetScreen(
+                    //userExerciseList is a list of AllExercises that includes the name, defaultReps, defaultSets, and weight. It is used to display the exercises in the SetScreen.
+                    exercises: userExerciseList,
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           }
         },
       ),

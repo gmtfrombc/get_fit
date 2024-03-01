@@ -14,9 +14,7 @@ class FirebaseServices {
     try {
       QuerySnapshot querySnapshot =
           await _firestore.collection('workouts').get();
-      // for (var doc in querySnapshot.docs) {
-      //   debugPrint('Workout data from firestore: ${doc.data()}');
-      // }
+
       return querySnapshot.docs.map((doc) {
         return WorkoutModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
@@ -25,6 +23,30 @@ class FirebaseServices {
     }
   }
 
+//fetch the workout sessions from 'user_workouts' based on the workout group. The list that is created becomes _dalyWorkoutsByDate
+  Future<List<WorkoutSession>> fetchUserWorkoutsForGroup(
+      String userId, String workoutGroup) async {
+    Query query = _firestore
+        .collection('user_workouts')
+        .where('userId', isEqualTo: userId)
+        .where('workoutGroup', isEqualTo: workoutGroup);
+
+    try {
+      QuerySnapshot querySnapshot = await query.get();
+      List<WorkoutSession> workoutSessions = querySnapshot.docs.map((doc) {
+        // Assuming you have a WorkoutSession model with a fromMap constructor
+        // debugPrint('Workout data from firestore: ${doc.data().toString()}');
+        return WorkoutSession.fromMap(doc.data() as Map<String, dynamic>);
+      }).toList();
+
+      return workoutSessions;
+    } catch (e) {
+      throw Exception(
+          'Error fetching workout sessions for group $workoutGroup: $e');
+    }
+  }
+
+//fetches all the workouts for the AddWorkoutScreen.
   Future<List<WorkoutModel>> fetchWorkoutsByGroup(String group) async {
     try {
       QuerySnapshot querySnapshot = await _firestore
@@ -39,9 +61,7 @@ class FirebaseServices {
     }
   }
 
-//This returns the list of user workout groups from _user_workout_list collection--for example, 'Strength' or 'Endurance' and will consist of a List of of workoutGroups that includes 'group' and 'exercises'
-//The exercises will be 'AllExercises; and includes defaultReps, defaultSets, exerciesId, name, and weight.
-//Need to query this list in order to get the index for groupIndex (0 or 1 for 'Strength' or 'Endurance')
+  //return the list of workoutGroups in user_workout_list. Will include the workout group (strength/endurance) and the list of exercises (name, defaultReps, defaultSets, weight). It is called from fetchUserWorkoutGroups to set _userExerciseList.
   Future<List<UserWorkoutModel>> fetchUserWorkoutGroups(String userId,
       {String? group}) async {
     Query query = _firestore
@@ -60,8 +80,7 @@ class FirebaseServices {
       List<UserWorkoutModel> userWorkoutGroups = querySnapshot.docs.map((doc) {
         return UserWorkoutModel.fromMap(doc.data() as Map<String, dynamic>);
       }).toList();
-      // debugPrint(
-      //     'User workout groups: ${userWorkoutGroups[0].exerciseList[0].group}');
+
       return userWorkoutGroups;
     } catch (e) {
       throw Exception('Error fetching user workout groups: $e');
@@ -71,10 +90,7 @@ class FirebaseServices {
   Future<void> saveWorkoutSession(
       Map<String, dynamic> workoutSessionData, String userId) async {
     try {
-      // Optionally, you can decide to use a specific document ID if necessary
-      // For instance, using the userId and the date to create a unique ID for the document
-      // String docId = '$userId_${DateTime.now().toIso8601String()}';
-      // final docRef = _firestore.collection('workout_sessions').doc(docId);
+
 
       final docRef =
           _firestore.collection('user_workouts').doc(); // Create a new document
@@ -141,7 +157,7 @@ class FirebaseServices {
     }
   }
 
-  Future<List<WorkoutSession>> fetchUserWorkoutsForAllDate(String userId,
+  Future<List<WorkoutSession>> fetchUserWorkoutsForAllDates(String userId,
       String selectedWorkoutGroup, String currentExercise) async {
     List<WorkoutSession> dailyWorkoutsByDate = [];
 

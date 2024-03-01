@@ -9,6 +9,8 @@ import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/services/firebase_services.dart';
 import 'package:provider/provider.dart';
 
+//Right now, we are fetching the entire previous sets for the selected group from firebase and storing in _dailyWorkoutsByDate. The list is being sorted and then displayed in PreviousWorkout method in the table in SetScreen. We need to pull out the specific exercise sets befor sorting the list and displaying it.
+
 class UserWorkoutProvider with ChangeNotifier {
   WorkoutSession? currentWorkoutSession;
   List<WorkoutSession> _dailyWorkoutsByDate = [];
@@ -21,6 +23,8 @@ class UserWorkoutProvider with ChangeNotifier {
 
   String _selectedWorkoutGroup = '';
 
+  String get selectedWorkoutGroup => _selectedWorkoutGroup;
+
   final int _currentGroupIndex = 0; // Default to the first group
 
   int get currentGroupIndex => _currentGroupIndex;
@@ -30,8 +34,41 @@ class UserWorkoutProvider with ChangeNotifier {
 
   final List<WorkoutGroups> _userExerciseList = [];
 
-  String get selectedWorkoutGroup => _selectedWorkoutGroup;
   List<WorkoutGroups> get userExerciseList => _userExerciseList;
+
+  // final Map<String, List<WorkoutSession>> _exerciseHistory = {};
+
+  // Map<String, List<WorkoutSession>> get exerciseHistory => _exerciseHistory;
+//This function is called in WorkoutScreen before navigating to SetScreen. It first creates a list of exercises that will be shown in the SetScreen listivew, and then it creates the _dailyExerciseByDate list which is all of the previous exercises the user has performeed for the selected group.
+  Future<void> fetchAndCacheWorkoutData(
+      String workoutGroup, String userId) async {
+//fetch the list of workoutGroups in user_workout_list (workout group and list of exercises). This creates the list _userExerciseList and is used in SetScreen to present the exercises for the selected group in the ListView.
+    await fetchUserWorkoutGroups(userId);
+    //create list _dailyWorkoutsByDate. This list containes all of the previous workout data for the selected group, including the daily workout list, userId, workoutGroup, and date.
+    _dailyWorkoutsByDate = await FirebaseServices()
+        .fetchUserWorkoutsForGroup(userId, workoutGroup);
+    notifyListeners();
+  }
+
+//as above; fetch the list of workoutGroups in user_workout_list (workout group and list of exercises). This creates the list _userExerciseList
+  Future<void> fetchUserWorkoutGroups(String userId) async {
+    FirebaseServices services = FirebaseServices();
+    List<UserWorkoutModel> userWorkoutGroups =
+        await services.fetchUserWorkoutGroups(userId);
+
+    _userExerciseList.clear();
+    for (var workoutGroupModel in userWorkoutGroups) {
+      for (var groupDetail in workoutGroupModel.exerciseList) {
+        if (groupDetail.group == _selectedWorkoutGroup) {
+          _userExerciseList.add(groupDetail);
+          for (int i = 0; i < _userExerciseList.length; i++) {
+            for (int j = 0; j < _userExerciseList[i].exercises.length; j++) {}
+          }
+        }
+      }
+    }
+    notifyListeners();
+  }
 
 //This function is used to set the selected group. It takes in the workoutGroup, for example 'Strength' and sets the selectedWorkoutGroup to that workoutGroup. It is used in the WorkoutScreen to set the selected group and present the exercises for that group in the initState and the WidgetsBinding.intance
   void setSelectedGroup(String workoutGroup) {
@@ -48,18 +85,17 @@ class UserWorkoutProvider with ChangeNotifier {
   }
 
   void nextExercise(String? userId) {
-
     if (!isLastExercise) {
       _currentExerciseIndex++;
 
       notifyListeners();
     }
-    String selectedExercise =
-        exercisesForSelectedWorkoutGroup[_currentExerciseIndex].name;
-    debugPrint('Selected exercise for NEXT exercise is: $selectedExercise');
-    fetchUserWorkoutsForAllDates(
-        userId!, selectedWorkoutGroup, selectedExercise);
-    notifyListeners();
+    // String selectedExercise =
+    //     exercisesForSelectedWorkoutGroup[_currentExerciseIndex].name;
+    // debugPrint('Selected exercise for NEXT exercise is: $selectedExercise');
+    // fetchUserWorkoutsForAllDates(
+    //     userId!, selectedWorkoutGroup, selectedExercise);
+    // notifyListeners();
   }
 
   void initializeWorkoutSession() {
@@ -169,15 +205,9 @@ class UserWorkoutProvider with ChangeNotifier {
   Future<void> fetchUserWorkoutsForAllDates(
       String userId, String workoutGroup, String exerciseName) async {
     List<WorkoutSession> dailyWorkoutsByDate = [];
-    debugPrint('UserId for fetchUserWorkoutsForAllDates is: $userId');
-    debugPrint(
-        'Selected workout group for fetchUserWorkoutsForAllDates is: $workoutGroup');
-    debugPrint(
-        'Current exercise name for fetchUserWorkoutsForAllDates is: $exerciseName');
-
     try {
       dailyWorkoutsByDate = await FirebaseServices()
-          .fetchUserWorkoutsForAllDate(userId, workoutGroup, exerciseName);
+          .fetchUserWorkoutsForAllDates(userId, workoutGroup, exerciseName);
     } catch (e) {
       debugPrint('Error fetching user workouts by date: $e');
       throw Exception('Error fetching user workouts by date: $e');
@@ -185,35 +215,33 @@ class UserWorkoutProvider with ChangeNotifier {
     _dailyWorkoutsByDate = dailyWorkoutsByDate;
     notifyListeners();
   }
+List<WorkoutSession> getSortedWorkoutsByExercise(String currentExercise) {
+    List<WorkoutSession> filteredAndTransformedList = _dailyWorkoutsByDate
+        .map((session) {
+          // Filter the dailyWorkout list to include only workouts for the currentExercise
+          List<UserWorkouts> filteredDailyWorkout = session.dailyWorkout
+              .where((workout) => workout.exerciseName == currentExercise)
+              .toList();
 
-  // Method to get sorted daily workouts by date
-  List<WorkoutSession> getSortedDailyWorkoutsByDate() {
-    // Clone the list to avoid modifying the original list
-    List<WorkoutSession> sortedList =
-        List<WorkoutSession>.from(_dailyWorkoutsByDate);
+          // Return a new WorkoutSession with the filtered dailyWorkout list
+          return WorkoutSession(
+            date: session.date,
+            workoutGroup: session.workoutGroup,
+            userId: session.userId,
+            dailyWorkout: filteredDailyWorkout,
+          );
+        })
+        .where((session) => session.dailyWorkout.isNotEmpty)
+        .toList(); // Keep only sessions that have the current exercise
 
-    // Sort the cloned list by date in descending order
-    sortedList.sort((a, b) => b.date.compareTo(a.date));
+    // Sort the transformed list by date in descending order
+    filteredAndTransformedList.sort((a, b) => b.date.compareTo(a.date));
 
-    return sortedList;
+    return filteredAndTransformedList;
   }
+
 
 //This function fetches the document that exists for the user from the collection user_workout_list. It takes in the userId and fetches the userWorkoutGroups for that userId. It then sets the userExerciseList to the userWorkoutGroups for the selected group. This list is used in the WorkoutScreen to create the exercises for the selected group that will be used in SetScreen.
-  Future<void> fetchUserWorkoutGroups(String userId) async {
-    FirebaseServices services = FirebaseServices();
-    List<UserWorkoutModel> userWorkoutGroups =
-        await services.fetchUserWorkoutGroups(userId);
-
-    _userExerciseList.clear();
-    for (var workoutGroupModel in userWorkoutGroups) {
-      for (var groupDetail in workoutGroupModel.exerciseList) {
-        if (groupDetail.group == _selectedWorkoutGroup) {
-          _userExerciseList.add(groupDetail);
-        }
-      }
-    }
-    notifyListeners();
-  }
 
 //this function is used in the AddWorkoutScreen to add the exercise to the selected group. It takes in the exercise and adds the exercise to the selected group. It returns true if the exercise is added successfully and false if the exercise already exists in the group.
   bool addExerciseToSelectedGroup(AllExercises exercise) {

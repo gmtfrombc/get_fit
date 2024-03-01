@@ -34,18 +34,18 @@ class _SetScreenState extends State<SetScreen> {
   @override
   void initState() {
     super.initState();
-    String userId =
-        Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
-    String selectedWorkoutGroup =
-        Provider.of<UserWorkoutProvider>(context, listen: false)
-            .selectedWorkoutGroup;
-    final userWorkoutProvider =
-        Provider.of<UserWorkoutProvider>(context, listen: false);
-    final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
-    String selectedExercise =
-        exercises[userWorkoutProvider.currentExerciseIndex].name;
-    userWorkoutProvider.fetchUserWorkoutsForAllDates(
-        userId, selectedWorkoutGroup, selectedExercise);
+    // String userId =
+    //     Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid;
+    // String selectedWorkoutGroup =
+    //     Provider.of<UserWorkoutProvider>(context, listen: false)
+    //         .selectedWorkoutGroup;
+    // final userWorkoutProvider =
+    //     Provider.of<UserWorkoutProvider>(context, listen: false);
+    // final exercises = userWorkoutProvider.exercisesForSelectedWorkoutGroup;
+    // String selectedExercise =
+    //     exercises[userWorkoutProvider.currentExerciseIndex].name;
+    // userWorkoutProvider.fetchUserWorkoutsForAllDates(
+    //     userId, selectedWorkoutGroup, selectedExercise);
 
     weightFocusNode.addListener(() {
       if (weightFocusNode.hasFocus) {
@@ -343,7 +343,10 @@ class _SetScreenState extends State<SetScreen> {
 
   Widget _buildPreviousSetGrid(BuildContext context) {
     final userWorkoutProvider = Provider.of<UserWorkoutProvider>(context);
-    final sortedWorkouts = userWorkoutProvider.getSortedDailyWorkoutsByDate();
+    final currentExercise =
+        userWorkoutProvider.exercisesForSelectedWorkoutGroup;
+    final sortedWorkouts = userWorkoutProvider.getSortedWorkoutsByExercise(
+        currentExercise[userWorkoutProvider.currentExerciseIndex].name);
     return sortedWorkouts.isEmpty
         ? const Center(
             child: Text(
