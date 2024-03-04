@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get_fit/models/workout_model.dart';
+import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/auth_provider.dart';
+import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
 import 'package:get_fit/screens/base_screen.dart';
 import 'package:get_fit/screens/workout_screen.dart';
@@ -24,6 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     Provider.of<WorkoutProvider>(context, listen: false).fetchWorkouts();
+    Provider.of<UserWorkoutProvider>(context, listen: false)
+        .fetchUserWorkoutGroupsForHomeScreen(
+      Provider.of<AuthProviderClass>(context, listen: false).currentUser!.uid,
+    );
   }
 
   @override
@@ -51,10 +56,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildContent(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8.0),
+          _buildBanner(),
+          const SizedBox(height: 10.0),
+          _buildWorkoutElementGrid(context),
+        ],
+      ),
+    );
+  }
+
   Widget _buildWorkoutElementGrid(BuildContext context) {
-    return Consumer<WorkoutProvider>(
-      builder: (context, workoutProvider, child) {
-        final elements = workoutProvider.workouts;
+    return Consumer<UserWorkoutProvider>(
+      builder: (context, userWorkoutProvider, child) {
+        final elements = userWorkoutProvider.userWorkoutGroupsForHomeScreen;
         if (elements.isEmpty) {
           return const Center(
             child: Text('No workouts found'),
@@ -77,7 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWorkoutElementCard(BuildContext context, workout) {
-    String imageUrl = workout.image;
+    String imageUrl = 'lib/assets/images/get_fit_icon.png';
+
     return InkWell(
       onTap: () {
         _handleButtonClick(workout);
@@ -143,34 +164,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 8.0),
-          _buildBanner(),
-          const SizedBox(height: 10.0),
-          _buildWorkoutElementGrid(context),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBanner() {
-    return Container(
-      color: AppTheme.primaryBackgroundColor,
-      child: Text(
-        'Choose a workout',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-          fontFamily: GoogleFonts.roboto().fontFamily,
+    return Stack(
+      children: [
+        const Align(
+          alignment: Alignment.center,
+          child: Text(
+            'Workouts',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
         ),
-      ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/buildworkout');
+            },
+            child: Text(
+              'New',
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -185,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleButtonClick(WorkoutModel workout) {
+  void _handleButtonClick(WorkoutGroups workout) {
     setState(() => isLoading = true);
     try {
       _handleWorkoutGroupSelection(workout);
@@ -198,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleWorkoutGroupSelection(WorkoutModel workout) {
+  void _handleWorkoutGroupSelection(WorkoutGroups workout) {
     Navigator.push(
       context,
       MaterialPageRoute(

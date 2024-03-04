@@ -6,6 +6,7 @@ import 'package:get_fit/providers/set_provider.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
+import 'package:get_fit/screens/build_workout.dart';
 import 'package:get_fit/screens/home_screen.dart';
 import 'package:get_fit/screens/logins/login.dart';
 import 'package:get_fit/themes/app_theme.dart';
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/homescreen': (context) => const HomeScreen(),
+        '/buildworkout': (context) => const BuildWorkout(),
       },
     );
   }

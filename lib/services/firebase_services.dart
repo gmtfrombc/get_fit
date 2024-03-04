@@ -23,6 +23,25 @@ class FirebaseServices {
     }
   }
 
+    Future<List<Map<String, dynamic>>> fetchUserWorkoutGroupsForHomeScreen(
+      String userId) async {
+    try {
+      DocumentSnapshot snapshot =
+          await _firestore.collection('user_workout_list').doc(userId).get();
+      if (snapshot.exists && snapshot.data() != null) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<dynamic> workoutGroups = data['workoutGroups'] ?? [];
+        // Convert each group to a Map<String, dynamic>
+        return workoutGroups.cast<Map<String, dynamic>>();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Error fetching user workout groups: $e");
+      return [];
+    }
+  }
+
 //fetch the workout sessions from 'user_workouts' based on the workout group. The list that is created becomes _dalyWorkoutsByDate
   Future<List<WorkoutSession>> fetchUserWorkoutsForGroup(
       String userId, String workoutGroup) async {
@@ -90,8 +109,6 @@ class FirebaseServices {
   Future<void> saveWorkoutSession(
       Map<String, dynamic> workoutSessionData, String userId) async {
     try {
-
-
       final docRef =
           _firestore.collection('user_workouts').doc(); // Create a new document
       await docRef.set(workoutSessionData);
@@ -157,45 +174,67 @@ class FirebaseServices {
     }
   }
 
-  Future<List<WorkoutSession>> fetchUserWorkoutsForAllDates(String userId,
-      String selectedWorkoutGroup, String currentExercise) async {
-    List<WorkoutSession> dailyWorkoutsByDate = [];
+  // Future<List<WorkoutSession>> fetchUserWorkoutsForAllDates(String userId,
+  //     String selectedWorkoutGroup, String currentExercise) async {
+  //   List<WorkoutSession> dailyWorkoutsByDate = [];
 
-    try {
-      // Fetch documents from 'user_workouts' where 'userId' and 'workoutGroup' match the provided values
-      QuerySnapshot snapshot = await _firestore
-          .collection('user_workouts')
-          .where('userId', isEqualTo: userId)
-          .where('workoutGroup', isEqualTo: selectedWorkoutGroup)
-          .get();
+  //   try {
+  //     // Fetch documents from 'user_workouts' where 'userId' and 'workoutGroup' match the provided values
+  //     QuerySnapshot snapshot = await _firestore
+  //         .collection('user_workouts')
+  //         .where('userId', isEqualTo: userId)
+  //         .where('workoutGroup', isEqualTo: selectedWorkoutGroup)
+  //         .get();
 
-      for (var doc in snapshot.docs) {
-        // Convert each document into a WorkoutSession
-        WorkoutSession session =
-            WorkoutSession.fromMap(doc.data() as Map<String, dynamic>);
+  //     for (var doc in snapshot.docs) {
+  //       // Convert each document into a WorkoutSession
+  //       WorkoutSession session =
+  //           WorkoutSession.fromMap(doc.data() as Map<String, dynamic>);
 
-        // Filter 'dailyWorkout' list by 'exerciseName'
-        var filteredDailyWorkout = session.dailyWorkout
-            .where((workout) => workout.exerciseName == currentExercise)
-            .toList();
+  //       // Filter 'dailyWorkout' list by 'exerciseName'
+  //       var filteredDailyWorkout = session.dailyWorkout
+  //           .where((workout) => workout.exerciseName == currentExercise)
+  //           .toList();
 
-        // If there are workouts after filtering, create a new WorkoutSession with the filtered list
-        if (filteredDailyWorkout.isNotEmpty) {
-          WorkoutSession filteredSession = WorkoutSession(
-            date: session.date,
-            workoutGroup: session.workoutGroup,
-            userId: session.userId,
-            dailyWorkout: filteredDailyWorkout,
-          );
+  //       // If there are workouts after filtering, create a new WorkoutSession with the filtered list
+  //       if (filteredDailyWorkout.isNotEmpty) {
+  //         WorkoutSession filteredSession = WorkoutSession(
+  //           date: session.date,
+  //           workoutGroup: session.workoutGroup,
+  //           userId: session.userId,
+  //           dailyWorkout: filteredDailyWorkout,
+  //         );
 
-          // Add the filtered session to the list
-          dailyWorkoutsByDate.add(filteredSession);
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching workouts: $e");
-    }
+  //         // Add the filtered session to the list
+  //         dailyWorkoutsByDate.add(filteredSession);
+  //       }
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error fetching workouts: $e");
+  //   }
 
-    return dailyWorkoutsByDate;
+  //   return dailyWorkoutsByDate;
+  // }
+
+  Future<void> addUserWorkoutGroup(
+      String userId, Map<String, dynamic> newWorkoutGroup) async {
+    debugPrint(' Adding group in firebase: newWorkoutGroup: $newWorkoutGroup');
+    DocumentReference docRef =
+        _firestore.collection('user_workout_list').doc(userId);
+
+    // Fetch the existing document for the user
+    DocumentSnapshot snapshot = await docRef.get();
+    Map<String, dynamic> userData =
+        snapshot.exists ? snapshot.data() as Map<String, dynamic> : {};
+
+    // Get existing workout groups or initialize if null
+    List<dynamic> existingGroups = userData['workoutGroups'] ?? [];
+
+    // Add the new workout group
+    existingGroups.add(newWorkoutGroup);
+
+    // Save back the updated document with the new workout group added
+    await docRef.set({'userId': userId, 'workoutGroups': existingGroups},
+        SetOptions(merge: true));
   }
 }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get_fit/models/all_exercises.dart';
+import 'package:get_fit/models/user_exercises.dart';
 import 'package:get_fit/providers/user_workout_provider.dart';
 import 'package:get_fit/models/workout_model.dart';
 import 'package:get_fit/providers/auth_provider.dart';
 import 'package:get_fit/providers/workout_provider.dart';
-import 'package:get_fit/screens/add_workout_screen.dart';
+import 'package:get_fit/screens/add_exercises_screen.dart';
 import 'package:get_fit/screens/base_screen.dart';
 import 'package:get_fit/screens/set_screen.dart';
 import 'package:get_fit/themes/app_theme.dart';
@@ -16,7 +17,7 @@ import 'package:provider/provider.dart';
 //Not pulling the data correctly from the firebase
 
 class WorkoutScreen extends StatefulWidget {
-  final WorkoutModel workout;
+  final WorkoutGroups workout;
 
   const WorkoutScreen({
     super.key,
@@ -363,7 +364,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   void _saveWorkout(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      final workoutGroupProvider =
+      final userWorkoutProvider =
           Provider.of<UserWorkoutProvider>(context, listen: false);
       final authProvider =
           Provider.of<AuthProviderClass>(context, listen: false);
@@ -372,7 +373,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       if (userId == null) {
         throw Exception('User not logged in');
       }
-      await workoutGroupProvider.saveCurrentWorkoutGroups(userId);
+      await userWorkoutProvider.saveCurrentWorkoutGroups(userId);
 
       scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text("Workouts saved successfully!")));
@@ -386,7 +387,11 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
   void _handleAddNewExerciseClick(BuildContext context, WorkoutModel workout) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => AddWorkoutScreen(workout: workout)),
+      MaterialPageRoute(
+          builder: (_) => AddExercisesScreen(
+                workout: workout,
+                isNewWorkout: false,
+              )),
     ).then((value) {
       if (mounted) {
         setState(
@@ -404,13 +409,13 @@ class _WorkoutScreenState extends State<WorkoutScreen> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text(
-            'Save Results?',
+            'Save Workout?',
             style: TextStyle(
               fontFamily: GoogleFonts.outfit().fontFamily,
             ),
           ),
           content: Text(
-            'Do you want to save the changes to your workout?',
+            'This will replace your exisiting workout?',
             style: TextStyle(fontFamily: GoogleFonts.outfit().fontFamily),
           ),
           actions: <Widget>[
